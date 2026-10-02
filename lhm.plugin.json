@@ -1,0 +1,75 @@
+{
+  "author": "Kelly Fraser",
+  "authorUrl": "https://github.com/KellyKazi3",
+  "cloudEndpoint": "https://idmly-production.up.railway.app/mcp",
+  "description": "Converts a self-contained HTML design into an editable Adobe InDesign (.idml) file: live text frames, paragraph styles, linked images. First 2 pages free; $49 lifetime license for full documents.",
+  "homepage": "https://www.idmly.com",
+  "identifier": "kellykazi3-idmly",
+  "name": "idmly",
+  "prompts": [],
+  "resources": [],
+  "tags": [
+    "indesign",
+    "idml",
+    "html",
+    "design",
+    "adobe",
+    "publishing",
+    "print",
+    "layout"
+  ],
+  "tools": [
+    {
+      "name": "convert_to_indesign",
+      "title": "Convert HTML design to InDesign (.idml)",
+      "description": "Convert a self-contained HTML design into an editable Adobe InDesign IDML file. Provide exactly one of html (the full document as a string) or url (a public link to a hosted .html). Returns a short-lived download URL plus pages converted, fonts InDesign needs active, and a geometry check. Designs with images come back as a .zip of the .idml and a Links/ folder; unzip them together. Without a license key only the first pages convert (free trial) and the result includes the purchase link.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "html": {
+            "type": "string",
+            "description": "The complete HTML document to convert (self-contained: inline CSS, fonts via Google Fonts or embedded, images as data URIs or absolute URLs)."
+          },
+          "url": {
+            "type": "string",
+            "description": "Public https URL of a hosted .html design (a direct link, not a share or app link)."
+          },
+          "name": {
+            "type": "string",
+            "description": "Base name for the output file (no extension). Defaults to 'design'."
+          },
+          "platform": {
+            "type": "string",
+            "enum": [
+              "mac",
+              "win"
+            ],
+            "description": "Which platform's InDesign will open the file (picks glyph-fallback fonts). Unknown platforms get free Noto/Source Han fallbacks, so ask the user if unsure."
+          }
+        },
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "idmly_status",
+      "title": "idmly status",
+      "description": "Check that the idmly engine is up and whether this connection carries a license key (presence only; the key is validated on conversion).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      }
+    }
+  ],
+  "version": "0.1"
+}

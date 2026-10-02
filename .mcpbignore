@@ -10,3 +10,4 @@ server.json
 glama.json
 .gitignore
 *.mcpb
+lhm.plugin.json
