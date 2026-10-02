@@ -1,0 +1,59 @@
+{
+  "manifest_version": "0.2",
+  "name": "idmly",
+  "display_name": "idmly",
+  "version": "0.1.3",
+  "description": "Convert a self-contained HTML design into an editable Adobe InDesign (.idml) file.",
+  "author": {
+    "name": "Kelly Fraser",
+    "url": "https://www.idmly.com"
+  },
+  "homepage": "https://www.idmly.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/KellyKazi3/idmly-mcp"
+  },
+  "license": "MIT",
+  "server": {
+    "type": "node",
+    "entry_point": "dist/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": [
+        "${__dirname}/dist/index.js"
+      ],
+      "env": {
+        "IDMLY_LICENSE_KEY": "${user_config.license_key}"
+      }
+    }
+  },
+  "tools": [
+    {
+      "name": "convert_to_indesign",
+      "description": "Convert a self-contained HTML design into an editable InDesign IDML file."
+    },
+    {
+      "name": "idmly_status",
+      "description": "Check the idmly engine is reachable and whether a license key is configured."
+    }
+  ],
+  "user_config": {
+    "license_key": {
+      "type": "string",
+      "title": "License key",
+      "description": "From your idmly purchase email. Leave blank for the free 2-page trial.",
+      "sensitive": true,
+      "required": false
+    }
+  },
+  "compatibility": {
+    "platforms": [
+      "darwin",
+      "win32",
+      "linux"
+    ],
+    "runtimes": {
+      "node": ">=20"
+    }
+  }
+}
