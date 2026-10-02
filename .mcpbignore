@@ -1,0 +1,12 @@
+# dist/index.js is a self-contained bundle, so the MCPB needs only the
+# manifest, dist/, README, LICENSE and package.json.
+node_modules/
+src/
+test/
+build.mjs
+tsconfig.json
+package-lock.json
+server.json
+glama.json
+.gitignore
+*.mcpb
