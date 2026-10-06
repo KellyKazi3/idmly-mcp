@@ -2,7 +2,7 @@
   "manifest_version": "0.2",
   "name": "idmly",
   "display_name": "idmly",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Convert a self-contained HTML design into an editable Adobe InDesign (.idml) file.",
   "author": {
     "name": "Kelly Fraser",

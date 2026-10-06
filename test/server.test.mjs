@@ -139,7 +139,7 @@ test("html mode writes <name>.idml and reports fields", async () => {
   assert.equal(r.structuredContent.output, path.join(out, "inline.idml"));
   assert.equal(await fs.readFile(r.structuredContent.output, "utf8"), "IDML-BYTES");
   assert.deepEqual(r.structuredContent.fonts, ["Inter", "Lora"]);
-  assert.equal(state.last.utm_content, "mcp-local");
+  assert.equal(state.last.utm_content, "mcp-local-test");   // client name ("test") rides in utm_content
   assert.equal(state.last.file.filename, "design.html");
   // second call with the same name must not overwrite
   const r2 = await call(c, { html: PAGE, name: "inline" });

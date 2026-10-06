@@ -1,6 +1,6 @@
 {
   "name": "idmly-mcp",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "mcpName": "io.github.KellyKazi3/idmly-mcp",
   "description": "MCP server for idmly: convert a self-contained HTML design into an editable Adobe InDesign file (.idml) from Claude Code, Cursor, Codex, Windsurf or Claude Desktop.",
   "keywords": [

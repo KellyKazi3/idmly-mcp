@@ -23,7 +23,6 @@ const ENGINE = (process.env.IDMLY_ENGINE_URL || "https://idmly-production.up.rai
 const LICENSE_KEY = (process.env.IDMLY_LICENSE_KEY || "").trim();
 const OUT_DIR_DEFAULT = (process.env.IDMLY_OUT_DIR || "").trim();
 const PRICING_URL = "https://www.idmly.com/#pricing";
-const BUY_URL = `${ENGINE}/buy?utm_source=mcp&utm_content=mcp-local`;
 // Node's fetch (undici) gives up on a silent server after ~5 minutes on its
 // own; the explicit timer keeps the message honest rather than extending it.
 const CONVERT_TIMEOUT_MS = 5 * 60 * 1000;
@@ -185,7 +184,7 @@ async function engineError(res: Response): Promise<EngineError> {
 
 function buyNote(): string {
   return `A $49 lifetime license covers the website and this MCP tool, unlimited full-document conversions. ` +
-    `Details: ${PRICING_URL} · Checkout: ${BUY_URL} · then set IDMLY_LICENSE_KEY in the MCP server config.`;
+    `Details: ${PRICING_URL} · Checkout: ${buyUrl()} · then set IDMLY_LICENSE_KEY in the MCP server config.`;
 }
 
 type ToolResult = { content: { type: "text"; text: string }[]; structuredContent?: Record<string, unknown>; isError?: boolean };
@@ -219,6 +218,23 @@ const server = new McpServer(
       "price and checkout link; relay that purchase sentence to the user as given.",
   },
 );
+
+// The calling MCP client's name (Claude Code, Cursor, Windsurf, …) rides in
+// utm_content so the funnel can tell WHICH AI tool converts, while the channel
+// stays "mcp" (utm_source). Read from the initialize handshake; empty and
+// harmless if the client sent none or we're not connected yet.
+function clientSlug(): string {
+  let name = "";
+  try { name = server.server.getClientVersion()?.name ?? ""; } catch { /* pre-initialize */ }
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 24);
+}
+function contentTag(): string {
+  const slug = clientSlug();
+  return slug ? `mcp-local-${slug}` : "mcp-local";
+}
+function buyUrl(): string {
+  return `${ENGINE}/buy?utm_source=mcp&utm_content=${encodeURIComponent(contentTag())}`;
+}
 
 server.registerTool(
   "convert_to_indesign",
@@ -285,7 +301,7 @@ server.registerTool(
         form.append("instance_id", instance);
       }
       form.append("utm_source", "mcp");
-      form.append("utm_content", "mcp-local");
+      form.append("utm_content", contentTag());
       const ctl = new AbortController();
       const abort = () => ctl.abort();
       extra.signal.addEventListener("abort", abort, { once: true });     // client cancelled the call
@@ -330,7 +346,7 @@ server.registerTool(
         lines.push(LICENSE_KEY ? "The configured IDMLY_LICENSE_KEY was not accepted." : buyNote());
         structured.trial_capped = err.capped;
         structured.pricing_url = PRICING_URL;
-        structured.buy_url = BUY_URL;
+        structured.buy_url = buyUrl();
       }
       return fail(lines.join("\n"), structured);
     }
@@ -412,7 +428,7 @@ server.registerTool(
         trial, truncated,
         fonts, geometry, images,
         ...(notice ? { notice } : {}),
-        ...(trial ? { pricing_url: PRICING_URL, buy_url: BUY_URL } : {}),
+        ...(trial ? { pricing_url: PRICING_URL, buy_url: buyUrl() } : {}),
         ...(warnings.length ? { warnings } : {}),
       },
     };
