@@ -120,6 +120,8 @@ https://idmly-production.up.railway.app/mcp
 Authorization: Bearer <your key>      (omit the header for the free trial)
 ```
 
+In claude.ai (or the Claude desktop app): **Customize → Connectors → Add custom connector**, paste the URL, choose **No sign-in**, then under **Request headers** pick `authorization` and enter the value `Bearer <your key>`, with the word `Bearer` and a space in front of the key. Claude sends the value exactly as typed and adds no scheme of its own; the engine also reads a bare key, so a value of just `<your key>` works too. Any other shape (`Basic …`, `Token …`) still connects, and the first conversion answers with what to change instead of running as the trial. If the dialog has no **Request headers** section, your Claude organization does not have that beta yet; use the local server above (`npx idmly-mcp` with `IDMLY_LICENSE_KEY`) instead.
+
 Because a remote tool cannot write to your disk, that endpoint returns a one-time download link instead of a file path: the file is deleted as soon as it is fetched, or after ten minutes unfetched. The same endpoint works with the OpenAI Responses API `mcp` tool and the Agents SDK.
 
 Plain REST is `POST /convert` with a multipart `file` (or `url`), plus `license_key` and `instance_id`. The first licensed response carries an `X-Idmly-Instance` header; send that value back as `instance_id` on every later call, or each call activates a new device against the license. The response is the `.idml` itself, or `application/zip` (containing `converted.idml` and `Links/`) when the design has images.
