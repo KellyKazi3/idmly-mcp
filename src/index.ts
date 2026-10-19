@@ -4,7 +4,7 @@
 // design has images) on disk where the agent can use it.
 //
 //   IDMLY_LICENSE_KEY   optional. Without it the engine runs the free trial
-//                       (first pages only) and the tool result says how to buy.
+//                       (a design's most detailed pages only) and the tool result says how to buy.
 //   IDMLY_ENGINE_URL    optional override (default: the hosted engine).
 //   IDMLY_OUT_DIR       optional default output directory (default: next to the
 //                       source file, or the current directory for inline HTML).
@@ -251,7 +251,7 @@ const server = new McpServer(
       "If it fails: 413 means the file is over the size cap (downscale or re-encode images, or host them and use " +
       "absolute URLs); 422 means nothing rendered (assets missing from the file, or a script that never finished); " +
       "429 and 503 are retryable after the given seconds; 402 with a license key means the key was rejected. " +
-      "Without IDMLY_LICENSE_KEY the engine converts the first pages as a free trial and the result names the " +
+      "Without IDMLY_LICENSE_KEY the engine converts a design's most detailed pages as a free trial and the result names the " +
       "price and checkout link; relay that purchase sentence to the user as given.",
   },
 );
@@ -282,8 +282,8 @@ server.registerTool(
       "Provide exactly one of: html (the full document as a string), path (a local .html file; only that one file " +
       "is uploaded, so inline its CSS, fonts and images first), or url (a public link to a hosted .html). Returns " +
       "the output path plus pages converted, fonts InDesign needs active, and a geometry check. Designs with images " +
-      "come back as an .idml next to a Links/ folder; keep them together. Without a license key only the first " +
-      "pages convert (free trial) and the result includes the purchase link.",
+      "come back as an .idml next to a Links/ folder; keep them together. Without a license key only a design's " +
+      "most detailed pages convert (free trial) and the result includes the purchase link.",
     inputSchema: {
       html: z.string().min(1).optional().describe("The complete HTML document to convert (self-contained: inline CSS, fonts via Google Fonts or embedded, images as data URIs or absolute URLs)."),
       path: z.string().min(1).optional().describe("Absolute or relative path to a local .html file to convert. Only this file is uploaded."),
@@ -450,6 +450,9 @@ server.registerTool(
     const pages = parseInt(h("x-idmly-pages") || "0", 10);
     const pagesTotal = parseInt(h("x-idmly-pages-total") || String(pages), 10);
     const trial = h("x-idmly-keyless") === "1";
+    // which pages the trial served (1-based, document order): the engine picks
+    // a design's most detailed pages, not the first ones
+    const trialPages = h("x-idmly-trial-pages").split(",").map(s => parseInt(s.trim(), 10)).filter(n => n > 0);
     const rawFonts = h("x-idmly-fonts").split(",").map(s => s.trim()).filter(Boolean);
     const fonts = rawFonts.filter(f => FONT_NAME_OK.test(f)).slice(0, 40);
     const fontsDropped = rawFonts.length - fonts.length;
@@ -458,8 +461,11 @@ server.registerTool(
     const notice = h("x-idmly-notice");
 
     const lines: string[] = [];
+    const which = trialPages.length
+      ? (trialPages.length === 1 ? `page ${trialPages[0]}` : `pages ${trialPages.slice(0, -1).join(", ")} and ${trialPages[trialPages.length - 1]}`)
+      : "";
     lines.push(truncated
-      ? `Converted ${pages} of ${pagesTotal} pages (free trial) → ${idmlPath}`
+      ? `Converted ${pages} of ${pagesTotal} pages (free trial${which ? `: ${which}, the most detailed ones` : ""}) → ${idmlPath}`
       : `Converted ${pages} page${pages === 1 ? "" : "s"} → ${idmlPath}`);
     if (isZip) lines.push(`Images (${images} placement${images === 1 ? "" : "s"}) are linked from the Links/ folder beside the .idml; move them together.`);
     if (fonts.length) lines.push(`Fonts InDesign needs active (names taken from the design): ${fonts.join(", ")}. If headings look scrambled, two versions of a family are active at once; keep one.`);
@@ -478,6 +484,7 @@ server.registerTool(
         format: isZip ? "idml+links" : "idml",
         pages, pages_total: pagesTotal,
         trial, truncated,
+        ...(truncated && trialPages.length ? { trial_pages: trialPages } : {}),
         fonts, geometry, images,
         ...(notice ? { notice } : {}),
         ...(trial ? { pricing_url: PRICING_URL, buy_url: buyUrl() } : {}),
@@ -514,7 +521,7 @@ server.registerTool(
       `Engine: ${ENGINE} — ${health.ok ? `reachable (rev ${health.rev ?? "?"})` : `NOT reachable (${health.reason}); a sleeping engine wakes in ~20 s, try again`}`,
       LICENSE_KEY
         ? `License key: configured (…${LICENSE_KEY.slice(-4)}), ${instance ? "activated on this machine" : "not yet activated (happens on first conversion)"}`
-        : `License key: none — conversions run as the free trial (first pages only). ${buyNote()}`,
+        : `License key: none — conversions run as the free trial (a design's most detailed pages only). ${buyNote()}`,
       `Default output: ${OUT_DIR_DEFAULT || "next to the source file (or the current directory)"}`,
     ].join("\n");
     return {
