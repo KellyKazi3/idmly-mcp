@@ -97,7 +97,7 @@ How the text is marked up decides how many frames it lands in and what the parag
 | 422 | nothing rendered, or a script never finished | inline the missing assets; remove the runaway script |
 | 429 / 503 | rate limit, or the license service is unreachable | retry after `retry_after_seconds` |
 
-The engine sleeps when idle. The tool waits for it to wake (up to ~25 s) before uploading, and if that first upload after a quiet spell is dropped it is sent once more on its own, so a cold start costs a pause, not an error.
+The engine is always on, so there is no cold start. The tool still checks that it answers (up to ~25 s) before uploading, and if the upload is dropped mid-way, say during a redeploy, it is sent once more on its own, so a blip costs a pause, not an error.
 
 Large designs can take a couple of minutes to render. Some clients cut tool calls at 60 seconds by default; raise your client's per-tool timeout (for example `MCP_TOOL_TIMEOUT` in Claude Code) for big documents.
 

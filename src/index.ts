@@ -26,12 +26,12 @@ const PRICING_URL = "https://www.idmly.com/#pricing";
 // Node's fetch (undici) gives up on a silent server after ~5 minutes on its
 // own; the explicit timer keeps the message honest rather than extending it.
 const CONVERT_TIMEOUT_MS = 5 * 60 * 1000;
-// The engine is scale-to-zero on Railway, whose docs say the FIRST request to
-// a slept service can come back as an edge 502 (or a connection that simply
-// drops) before the container is up. The website waits for /health and then
-// retries a dropped upload once; this tool does the same, so an agent's first
-// call after a quiet spell reads as a pause, not an outage. Both knobs are
-// env-tunable only so the tests can run the dance in milliseconds.
+// The engine runs always-on on Railway (Serverless OFF), so there is no cold
+// start. Railway's edge can still answer a request with a 502 (or drop the
+// connection) while a redeploy swaps containers in. The website waits for
+// /health and then retries a dropped upload once; this tool does the same, so
+// an agent's call during a redeploy reads as a pause, not an outage. Both
+// knobs are env-tunable only so the tests can run the dance in milliseconds.
 const WAKE_POLL_MS = Number(process.env.IDMLY_WAKE_POLL_MS) || 3000;
 const WAKE_TRIES = 8;                                  // ~24 s cap, then the upload goes anyway
 const RETRY_PAUSE_MS = Number(process.env.IDMLY_RETRY_PAUSE_MS) || 2500;
@@ -130,8 +130,8 @@ function withTimeout(parent: AbortSignal, ms: number): AbortSignal {
   return ctl.signal;
 }
 
-/** Bounded wait for the engine to answer /health 200 — a slept container
- *  booting, or a redeploy swapping in. Never waits for good: after WAKE_TRIES
+/** Bounded wait for the engine to answer /health 200 — a redeploy swapping
+ *  in, or a brief edge blip. Never waits for good: after WAKE_TRIES
  *  the caller sends anyway and the engine's own errors take over. */
 async function engineReady(parent: AbortSignal): Promise<boolean> {
   for (let i = 0; i < WAKE_TRIES && !parent.aborted; i++) {
@@ -339,7 +339,7 @@ server.registerTool(
       }
       form.append("utm_source", "mcp");
       form.append("utm_content", contentTag());
-      // wake-and-retry: wait for /health before the upload; if the upload still
+      // ready-and-retry: wait for /health before the upload; if the upload still
       // dies on the wire, or Railway's edge answers 502 itself (the engine never
       // saw it), pause, re-check readiness and send the same form once more. An
       // identical re-upload is safe server-side: the trial guard treats it as
@@ -363,13 +363,13 @@ server.registerTool(
           const timedOut = (e as Error).name === "AbortError" || code === "UND_ERR_HEADERS_TIMEOUT" || code === "UND_ERR_BODY_TIMEOUT";
           if (extra.signal.aborted) return fail("The conversion was cancelled.");
           if (timedOut) return fail(`The conversion did not finish within ${CONVERT_TIMEOUT_MS / 60000} minutes. Very large designs may need the hosted endpoint or a smaller file.`);
-          if (attempt > 0) return fail(`Could not reach the idmly engine at ${ENGINE}: ${describeError(e)}. Waited for it to wake and retried once; try again in a minute.`);
+          if (attempt > 0) return fail(`Could not reach the idmly engine at ${ENGINE}: ${describeError(e)}. Waited for it to answer and retried once; try again in a minute.`);
           wireError = e;
         } finally {
           clearTimeout(timer);
           extra.signal.removeEventListener("abort", abort);
         }
-        console.error(`idmly-mcp: ${wireError ? `upload dropped (${describeError(wireError)})` : "edge 502 while the engine wakes"} — retrying once`);
+        console.error(`idmly-mcp: ${wireError ? `upload dropped (${describeError(wireError)})` : "edge 502 from the engine's host"} — retrying once`);
         await sleep(RETRY_PAUSE_MS);
         await engineReady(extra.signal);
       }
@@ -518,7 +518,7 @@ server.registerTool(
     const health = await probeHealth();
     const instance = LICENSE_KEY ? await loadInstance(LICENSE_KEY) : "";
     const text = [
-      `Engine: ${ENGINE} — ${health.ok ? `reachable (rev ${health.rev ?? "?"})` : `NOT reachable (${health.reason}); a sleeping engine wakes in ~20 s, try again`}`,
+      `Engine: ${ENGINE} — ${health.ok ? `reachable (rev ${health.rev ?? "?"})` : `NOT reachable (${health.reason}); it may be mid-redeploy, try again in a minute`}`,
       LICENSE_KEY
         ? `License key: configured (…${LICENSE_KEY.slice(-4)}), ${instance ? "activated on this machine" : "not yet activated (happens on first conversion)"}`
         : `License key: none — conversions run as the free trial (a design's most detailed pages only). ${buyNote()}`,
