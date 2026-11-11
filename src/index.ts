@@ -465,7 +465,7 @@ server.registerTool(
       ? (trialPages.length === 1 ? `page ${trialPages[0]}` : `pages ${trialPages.slice(0, -1).join(", ")} and ${trialPages[trialPages.length - 1]}`)
       : "";
     lines.push(truncated
-      ? `Converted ${pages} of ${pagesTotal} pages (free trial${which ? `: ${which}, the most detailed ones` : ""}) → ${idmlPath}`
+      ? `Converted ${pages} of ${pagesTotal} pages (free trial${which ? `: ${which}, the most detailed ${trialPages.length === 1 ? "one" : "ones"}` : ""}) → ${idmlPath}`
       : `Converted ${pages} page${pages === 1 ? "" : "s"} → ${idmlPath}`);
     if (isZip) lines.push(`Images (${images} placement${images === 1 ? "" : "s"}) are linked from the Links/ folder beside the .idml; move them together.`);
     if (fonts.length) lines.push(`Fonts InDesign needs active (names taken from the design): ${fonts.join(", ")}. If headings look scrambled, two versions of a family are active at once; keep one.`);

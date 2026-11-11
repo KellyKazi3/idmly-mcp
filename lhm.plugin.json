@@ -2,7 +2,7 @@
   "author": "Kelly Fraser",
   "authorUrl": "https://github.com/KellyKazi3",
   "cloudEndpoint": "https://idmly-production.up.railway.app/mcp",
-  "description": "Converts a self-contained HTML design into an editable Adobe InDesign (.idml) file: live text frames, paragraph styles, linked images. First 2 pages free; $49 lifetime license for full documents.",
+  "description": "Converts a self-contained HTML design into an editable Adobe InDesign (.idml) file: live text frames, paragraph styles, linked images. Up to 2 pages free (a design's most detailed); $49 lifetime license for full documents.",
   "homepage": "https://www.idmly.com",
   "identifier": "kellykazi3-idmly",
   "name": "idmly",

@@ -2,7 +2,7 @@
 
 Convert a self-contained HTML design into an editable Adobe InDesign file (`.idml`) from the AI agent you already use. This is the [idmly](https://www.idmly.com) engine exposed as a Model Context Protocol server, so Claude Code, Cursor, Codex, Windsurf or Claude Desktop can hand a finished design straight to InDesign.
 
-The two most detailed pages of any design convert free, no key needed (the result names which pages they were). A [$49 lifetime license](https://www.idmly.com/#pricing) unlocks unlimited full-document conversions and covers both the website and this tool.
+A design's two most detailed pages convert free, no key needed, and the result names which pages they were (a two-page design converts its more detailed page; a single page converts whole). A [$49 lifetime license](https://www.idmly.com/#pricing) unlocks unlimited full-document conversions and covers both the website and this tool.
 
 ## Install
 

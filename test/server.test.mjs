@@ -75,6 +75,7 @@ const engine = http.createServer((req, res) => {
     switch (state.mode) {
       case "idml": return file(Buffer.from("IDML-BYTES"), "application/vnd.adobe.indesign-idml-package", IDML_HDR);
       case "trial": return file(Buffer.from("IDML-TRIAL"), "application/vnd.adobe.indesign-idml-package", { ...IDML_HDR, "X-Idmly-Pages-Total": "5", "X-Idmly-Keyless": "1", "X-Idmly-Trial": "2" });
+      case "trial1of2": return file(Buffer.from("IDML-TRIAL"), "application/vnd.adobe.indesign-idml-package", { ...IDML_HDR, "X-Idmly-Pages": "1", "X-Idmly-Pages-Total": "2", "X-Idmly-Keyless": "1", "X-Idmly-Trial": "1", "X-Idmly-Trial-Pages": "2" });
       case "zip": return file(zip([["converted.idml", "IDML-IN-ZIP"], ["Links/img-01.png", Buffer.from([0x89, 0x50, 0x4e, 0x47])]]), "application/zip", { ...IDML_HDR, "X-Idmly-Images": "1" });
       case "zipstored": return file(zip([["converted.idml", "IDML-STORED"], ["Links/a.png", "PNG"]], { deflate: false }), "application/zip", { ...IDML_HDR, "X-Idmly-Images": "1" });
       case "zipslip": return file(zip([["converted.idml", "X"], ["../evil.txt", "E"], ["/abs.txt", "A"], ["Links/ok.png", "P"]]), "application/zip", IDML_HDR);
@@ -233,6 +234,15 @@ test("names cannot become path segments and keep non-Latin letters", async () =>
   assert.equal(r.structuredContent.output, path.join(out, "design.idml"));
   const r2 = await call(c, { html: PAGE, name: "Über Café/報告 v2" });
   assert.equal(path.basename(r2.structuredContent.output), "Über-Café-報告-v2.idml");
+  await c.close();
+});
+
+test("a two-page design's trial names its one converted page in the singular", async () => {
+  state.mode = "trial1of2";
+  const c = await connect();
+  const r = await call(c, { html: PAGE, name: "two" });
+  assert.match(r.content[0].text, /Converted 1 of 2 pages \(free trial: page 2, the most detailed one\)/);
+  assert.deepEqual(r.structuredContent.trial_pages, [2]);
   await c.close();
 });
 
