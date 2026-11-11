@@ -2,7 +2,7 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.KellyKazi3/idmly-mcp",
   "title": "idmly: HTML to InDesign (IDML)",
-  "description": "Convert a self-contained HTML design into an editable Adobe InDesign (.idml) file. Up to 2 pages free.",
+  "description": "Turn a self-contained HTML design into an editable Adobe InDesign (.idml) file. Up to 2 pages free.",
   "websiteUrl": "https://www.idmly.com",
   "repository": {
     "url": "https://github.com/KellyKazi3/idmly-mcp",

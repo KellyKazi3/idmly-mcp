@@ -237,6 +237,15 @@ test("names cannot become path segments and keep non-Latin letters", async () =>
   await c.close();
 });
 
+test("server.json fits the MCP registry's limits", async () => {
+  // the registry rejects a description over 100 characters (422 on publish, 2026-11-11)
+  const sj = JSON.parse(await fs.readFile(new URL("../server.json", import.meta.url), "utf8"));
+  assert.ok(sj.description.length <= 100, `description is ${sj.description.length} characters`);
+  const pkg = JSON.parse(await fs.readFile(new URL("../package.json", import.meta.url), "utf8"));
+  assert.equal(sj.version, pkg.version, "server.json version matches package.json");
+  assert.equal(sj.packages[0].version, pkg.version, "server.json package version matches package.json");
+});
+
 test("a two-page design's trial names its one converted page in the singular", async () => {
   state.mode = "trial1of2";
   const c = await connect();
